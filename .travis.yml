@@ -1,0 +1,19 @@
+sudo: required
+services:
+  - docker build -t juchilian/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true juchilian/react-test npm test
+
+after_success:
+  - docker build -t juchilian/multi-client ./client
+  - docker build -t juchilian/multi-nginx ./nginx
+  - docker build -t juchilian/mutti-server ./server
+  - docker build -t juchilian/mutti-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push juchilian/multi-client
+  - docker push juchilian/multi-nginx
+  - docker push juchilian/mutti-server
+  - docker push juchilian/mutti-worker
